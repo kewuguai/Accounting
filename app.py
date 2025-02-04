@@ -5,7 +5,7 @@ import fitz              # 4️⃣ 解析 PDF
 import docx              # 5️⃣ 解析 Word
 
 # 6️⃣ 版本信息
-VERSION = "1.5"
+VERSION = "1.6"
 
 # 7️⃣ 读取 OpenAI API Key（优先从 Secrets 读取）
 if "OPENAI_API_KEY" in st.secrets:  
@@ -28,6 +28,9 @@ if "chat_history" not in st.session_state:
 
 if "uploaded_files_count" not in st.session_state:
     st.session_state["uploaded_files_count"] = 0  
+
+if "last_user_input" not in st.session_state:
+    st.session_state["last_user_input"] = None  # ✅ 记录上次输入，防止重复提交
 
 # 1️⃣0️⃣ 解析 Excel
 def read_excel(file):
@@ -109,7 +112,9 @@ if st.session_state["chat_history"]:
 user_input = st.text_input("📝 请输入你的问题（基于已上传文件进行分析）", "")
 
 # 2️⃣1️⃣ 处理 AI 回答
-if user_input:
+if user_input and user_input != st.session_state["last_user_input"]:
+    st.session_state["last_user_input"] = user_input  # ✅ 记录输入，防止重复提交
+
     # 2️⃣2️⃣ 处理 "我上传了多少份文件？" 问题
     if user_input.lower() in ["我上传了多少份文件？", "我上传了几份文件？"]:
         response = f"✅ 您已上传 {st.session_state['uploaded_files_count']} 份文件。"
@@ -119,4 +124,6 @@ if user_input:
 
     st.session_state["chat_history"].append(("用户", user_input))
     st.session_state["chat_history"].append(("AI", response))
-    st.rerun()  # ✅ 修复 `st.experimental_rerun()` 问题
+    
+    # ✅ 只在用户输入新问题后触发 `rerun`
+    st.experimental_set_query_params(refresh="true")
