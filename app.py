@@ -1,26 +1,23 @@
 import streamlit as st   # 1️⃣ Streamlit UI 框架
 import openai            # 2️⃣ OpenAI API
-import pandas as pd      # 3️⃣ Excel 数据处理
+import pandas as pd      # 3️⃣ 解析 Excel
 import fitz              # 4️⃣ 解析 PDF
 import docx              # 5️⃣ 解析 Word
+import os                # 6️⃣ 读取环境变量
 
-# 6️⃣ 版本信息
-VERSION = "1.6"
+# 7️⃣ 版本信息
+VERSION = "1.7"
 
-# 7️⃣ 读取 OpenAI API Key（优先从 Secrets 读取）
+# 8️⃣ 读取 OpenAI API Key（优先从 Secrets 读取）
 if "OPENAI_API_KEY" in st.secrets:  
     openai_api_key = st.secrets["OPENAI_API_KEY"]
 else:
-    import os
     openai_api_key = os.getenv("OPENAI_API_KEY", "sk-xxxx")  # 仅供本地测试
 
-# 8️⃣ 确保 API Key 正确
+# 9️⃣ 确保 API Key 正确
 if not openai_api_key or "sk-" not in openai_api_key:
     st.error("⚠️ 未检测到有效的 OpenAI API Key，请检查 `secrets.toml` 配置！")
     st.stop()
-
-# 9️⃣ 创建 OpenAI 客户端
-client = openai.OpenAI(api_key=openai_api_key)
 
 # 🔹 **初始化 `session_state` 避免 AI 交互异常**
 if "chat_history" not in st.session_state:
@@ -28,6 +25,9 @@ if "chat_history" not in st.session_state:
 
 if "uploaded_files_count" not in st.session_state:
     st.session_state["uploaded_files_count"] = 0  
+
+if "file_data" not in st.session_state:  # ✅ 确保 file_data 存在
+    st.session_state["file_data"] = ""
 
 if "last_user_input" not in st.session_state:
     st.session_state["last_user_input"] = None  # ✅ 记录上次输入，防止重复提交
@@ -53,6 +53,7 @@ def read_pdf(file):
 # 1️⃣3️⃣ 调用 OpenAI 进行 AI 分析
 def ask_chatgpt(prompt):
     try:
+        client = openai.OpenAI(api_key=openai_api_key)
         response = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
@@ -112,7 +113,7 @@ if st.session_state["chat_history"]:
 user_input = st.text_input("📝 请输入你的问题（基于已上传文件进行分析）", "")
 
 # 2️⃣1️⃣ 处理 AI 回答
-if user_input and user_input != st.session_state["last_user_input"]:
+if user_input and user_input != st.session_state.get("last_user_input", ""):
     st.session_state["last_user_input"] = user_input  # ✅ 记录输入，防止重复提交
 
     # 2️⃣2️⃣ 处理 "我上传了多少份文件？" 问题
