@@ -4,12 +4,15 @@ import pandas as pd
 import fitz  # 解析 PDF
 import docx  # 解析 Word
 
+# 🔹 版本信息
+VERSION = "1.0"
+
 # 🔹 读取 API Key（优先从 Secrets 读取）
 if "OPENAI_API_KEY" in st.secrets:
-    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
 else:
     import os
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-xxxx")  # 仅供本地测试
+    openai.api_key = os.getenv("OPENAI_API_KEY", "sk-xxxx")  # 仅供本地测试
 
 # 🔹 初始化会话存储
 if "file_data" not in st.session_state:
@@ -18,12 +21,14 @@ if "file_data" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 🔹 调用 OpenAI 进行 AI 分析
+# 🔹 调用 OpenAI 进行 AI 分析（修正 API 版本）
 def ask_chatgpt(prompt):
     response = openai.ChatCompletion.create(
         model="gpt-4-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        api_key=OPENAI_API_KEY
+        messages=[
+            {"role": "system", "content": "你是一个财务分析专家，请根据用户提供的文件数据进行分析。"},
+            {"role": "user", "content": prompt}
+        ]
     )
     return response["choices"][0]["message"]["content"]
 
@@ -47,6 +52,7 @@ def read_pdf(file):
 
 # 🔹 Streamlit 界面
 st.title("📊 AI 财务文件分析助手")
+st.write(f"📌 **版本 {VERSION}**")
 st.write("上传 **Excel、Word、PDF**，AI 自动解析内容，并可进行交互式分析！")
 
 # 🔹 上传文件
