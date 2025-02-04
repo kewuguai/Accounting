@@ -9,7 +9,7 @@ if "OPENAI_API_KEY" in st.secrets:
     OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 else:
     import os
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-xxxx")  # 本地调试使用
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-xxxx")  # 仅供本地测试
 
 # 🔹 初始化会话存储
 if "file_data" not in st.session_state:
@@ -76,19 +76,24 @@ if uploaded_files:
         st.session_state.chat_history.append(("AI", analysis_result))
         st.write(analysis_result)
 
-# 🔹 AI 交互对话框
+# 🔹 AI 交互对话框（始终显示）
 st.subheader("💬 AI 交互分析")
+
+# 显示历史对话
+if st.session_state.chat_history:
+    for role, msg in st.session_state.chat_history:
+        if role == "用户":
+            st.markdown(f"👤 **用户**: {msg}")
+        else:
+            st.markdown(f"🤖 **AI**: {msg}")
+
+# 用户输入问题
 user_input = st.text_input("📝 请输入你的问题（基于已上传文件进行分析）", "")
 
+# 处理 AI 回答
 if user_input:
     chat_prompt = f"文件数据：\n{st.session_state.file_data}\n\n用户问题：{user_input}"
     response = ask_chatgpt(chat_prompt)
     st.session_state.chat_history.append(("用户", user_input))
     st.session_state.chat_history.append(("AI", response))
-    st.write(response)
-
-# 🔹 显示对话历史
-if st.session_state.chat_history:
-    st.subheader("📜 对话历史")
-    for role, msg in st.session_state.chat_history:
-        st.write(f"**{role}**: {msg}")
+    st.experimental_rerun()  # 触发页面更新，防止刷新后历史消失
