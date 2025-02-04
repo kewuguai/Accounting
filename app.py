@@ -5,7 +5,7 @@ import fitz  # 解析 PDF
 import docx  # 解析 Word
 
 # 🔹 版本信息
-VERSION = "1.2"
+VERSION = "1.3"
 
 # 🔹 读取 API Key（优先从 Secrets 读取）
 if "OPENAI_API_KEY" in st.secrets:
@@ -17,12 +17,12 @@ else:
 # ✅ 使用 OpenAI 新 API 方式（创建 OpenAI 客户端）
 client = openai.OpenAI(api_key=openai_api_key)
 
-# 🔹 初始化会话存储（修正 `AttributeError`）
+# 🔹 初始化会话存储（修正 `session_state` 错误）
 if "file_data" not in st.session_state:
     st.session_state["file_data"] = ""
 
 if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []  # ✅ 修复 session_state 错误
+    st.session_state["chat_history"] = []  # ✅ 确保 chat_history 存在
 
 # 🔹 调用 OpenAI 进行 AI 分析
 def ask_chatgpt(prompt):
@@ -105,4 +105,4 @@ if user_input:
     response = ask_chatgpt(chat_prompt)
     st.session_state["chat_history"].append(("用户", user_input))
     st.session_state["chat_history"].append(("AI", response))
-    st.experimental_rerun()  # 触发页面更新，防止刷新后历史消失
+    st.rerun()  # ✅ 修复 `st.experimental_rerun()` 错误
