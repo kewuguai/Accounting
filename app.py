@@ -6,7 +6,7 @@ import docx              # 5️⃣ 解析 Word
 import os                # 6️⃣ 读取环境变量
 
 # 7️⃣ 版本信息
-VERSION = "1.7"
+VERSION = "1.8"
 
 # 8️⃣ 读取 OpenAI API Key（优先从 Secrets 读取）
 if "OPENAI_API_KEY" in st.secrets:  
@@ -127,4 +127,4 @@ if user_input and user_input != st.session_state.get("last_user_input", ""):
     st.session_state["chat_history"].append(("AI", response))
     
     # ✅ 只在用户输入新问题后触发 `rerun`
-    st.experimental_set_query_params(refresh="true")
+    st.query_params["refresh"] = "true"  # ✅ 解决 `st.experimental_set_query_params` 被移除的问题
