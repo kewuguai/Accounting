@@ -5,7 +5,7 @@ import fitz  # 解析 PDF
 import docx  # 解析 Word
 
 # 🔹 版本信息
-VERSION = "1.1"
+VERSION = "1.2"
 
 # 🔹 读取 API Key（优先从 Secrets 读取）
 if "OPENAI_API_KEY" in st.secrets:
@@ -17,7 +17,14 @@ else:
 # ✅ 使用 OpenAI 新 API 方式（创建 OpenAI 客户端）
 client = openai.OpenAI(api_key=openai_api_key)
 
-# 🔹 调用 OpenAI 进行 AI 分析（修正 API 版本）
+# 🔹 初始化会话存储（修正 `AttributeError`）
+if "file_data" not in st.session_state:
+    st.session_state["file_data"] = ""
+
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []  # ✅ 修复 session_state 错误
+
+# 🔹 调用 OpenAI 进行 AI 分析
 def ask_chatgpt(prompt):
     response = client.chat.completions.create(
         model="gpt-4-turbo",
@@ -68,22 +75,22 @@ if uploaded_files:
             file_contents += read_pdf(uploaded_file)
 
     # 🔹 保存解析数据
-    st.session_state.file_data = file_contents
+    st.session_state["file_data"] = file_contents
 
     # 🔹 AI 生成初步分析
     if st.button("📊 生成 AI 分析"):
         with st.spinner("AI 正在分析文件，请稍候..."):
             analysis_result = ask_chatgpt(file_contents)
         st.success("✅ AI 分析完成！")
-        st.session_state.chat_history.append(("AI", analysis_result))
+        st.session_state["chat_history"].append(("AI", analysis_result))
         st.write(analysis_result)
 
 # 🔹 AI 交互对话框（始终显示）
 st.subheader("💬 AI 交互分析")
 
-# 显示历史对话
-if st.session_state.chat_history:
-    for role, msg in st.session_state.chat_history:
+# 显示历史对话（修复 `chat_history` 错误）
+if "chat_history" in st.session_state and st.session_state["chat_history"]:
+    for role, msg in st.session_state["chat_history"]:
         if role == "用户":
             st.markdown(f"👤 **用户**: {msg}")
         else:
@@ -94,8 +101,8 @@ user_input = st.text_input("📝 请输入你的问题（基于已上传文件�
 
 # 处理 AI 回答
 if user_input:
-    chat_prompt = f"文件数据：\n{st.session_state.file_data}\n\n用户问题：{user_input}"
+    chat_prompt = f"文件数据：\n{st.session_state['file_data']}\n\n用户问题：{user_input}"
     response = ask_chatgpt(chat_prompt)
-    st.session_state.chat_history.append(("用户", user_input))
-    st.session_state.chat_history.append(("AI", response))
+    st.session_state["chat_history"].append(("用户", user_input))
+    st.session_state["chat_history"].append(("AI", response))
     st.experimental_rerun()  # 触发页面更新，防止刷新后历史消失
