@@ -29,6 +29,9 @@ if "chat_history" not in st.session_state:
 if "uploaded_files_count" not in st.session_state:
     st.session_state["uploaded_files_count"] = 0  
 
+if "file_data" not in st.session_state:
+    st.session_state["file_data"] = ""
+
 # 🎨 自定义 ChatGPT 风格的 UI
 st.markdown(
     """
