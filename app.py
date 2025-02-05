@@ -23,14 +23,9 @@ if not openai_api_key or "sk-" not in openai_api_key:
 client = openai.OpenAI(api_key=openai_api_key)
 
 # 🔹 **初始化 `session_state` 避免 AI 交互异常**
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
-
-if "uploaded_files_count" not in st.session_state:
-    st.session_state["uploaded_files_count"] = 0  
-
-if "file_data" not in st.session_state:
-    st.session_state["file_data"] = ""
+for key in ["chat_history", "uploaded_files_count", "file_data"]:
+    if key not in st.session_state:
+        st.session_state[key] = [] if key == "chat_history" else "" if key == "file_data" else 0
 
 # 🎨 自定义 ChatGPT 风格的 UI
 st.markdown(
